@@ -86,6 +86,9 @@ except ImportError:
 # =============================================================================
 HandlerFunc = Callable[[Dict[str, Any]], Awaitable[List[TextContent]]]
 
+# v6.3: Track per-project hints to avoid spam (shown once per session)
+_phpstan_hint_shown: Set[str] = set()  # Set of project_ids where hint was shown
+
 
 class HandlerRegistry:
     """
@@ -486,6 +489,15 @@ async def handle_track(args: Dict[str, Any]) -> List[TextContent]:
             )
             if similar:
                 messages.append(format_auto_suggest(similar))
+
+        # v6.3: Show one-time hint if PHPStan not available for PHP files
+        if validation.get("phpstan_available") is False:
+            if state.project_id not in _phpstan_hint_shown:
+                _phpstan_hint_shown.add(state.project_id)
+                messages.append("")
+                messages.append("💡 **PHPStan nicht installiert** - Erweiterte PHP-Analyse deaktiviert")
+                messages.append("   PHPStan erkennt Null-Zugriffe und Typ-Fehler VOR der Ausführung.")
+                messages.append("   Install: `composer global require phpstan/phpstan`")
 
     # v6.2: Symbol Validation - check for hallucinated function calls
     run_symbol_validation = (

@@ -54,6 +54,7 @@ class SyntaxValidator:
 
         try:
             # === PHP Validation ===
+            phpstan_available = None  # None = not checked, True/False = checked
             if ext == ".php" and ".blade.php" not in str(full_path):
                 # Step 1: Basic syntax check (php -l)
                 result = await SyntaxValidator._run_command(
@@ -69,6 +70,7 @@ class SyntaxValidator:
                 # Step 2: Static analysis with PHPStan (if enabled and syntax OK)
                 elif PHPSTAN_ENABLED:
                     phpstan_result = await SyntaxValidator._run_phpstan(str(full_path))
+                    phpstan_available = phpstan_result["available"]
                     if phpstan_result["errors"]:
                         for err in phpstan_result["errors"][:3]:  # Max 3 errors
                             errors.append({
@@ -137,11 +139,15 @@ class SyntaxValidator:
         except Exception as e:
             logger.error(f"Validation error for {file_path}: {e}")
 
-        return {
+        result = {
             "valid": len(errors) == 0,
             "errors": errors,
             "checked": ext or "unknown"
         }
+        # v6.3: Include PHPStan availability for user hints
+        if phpstan_available is not None:
+            result["phpstan_available"] = phpstan_available
+        return result
 
     @staticmethod
     async def _run_command(cmd: List[str]) -> Dict[str, Any]:
