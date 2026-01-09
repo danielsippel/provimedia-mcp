@@ -13,7 +13,7 @@ import asyncio
 from pathlib import Path
 from typing import Dict, Any, List
 
-from .config import SYNTAX_CHECK_TIMEOUT_SECONDS, logger
+from .config import SYNTAX_CHECK_TIMEOUT_SECONDS, PHPSTAN_ENABLED, PHPSTAN_LEVEL, logger
 
 # Async file I/O
 try:
@@ -55,6 +55,7 @@ class SyntaxValidator:
         try:
             # === PHP Validation ===
             if ext == ".php" and ".blade.php" not in str(full_path):
+                # Step 1: Basic syntax check (php -l)
                 result = await SyntaxValidator._run_command(
                     ["php", "-l", str(full_path)]
                 )
@@ -65,6 +66,16 @@ class SyntaxValidator:
                         "message": error_msg,
                         "file": str(file_path)
                     })
+                # Step 2: Static analysis with PHPStan (if enabled and syntax OK)
+                elif PHPSTAN_ENABLED:
+                    phpstan_result = await SyntaxValidator._run_phpstan(str(full_path))
+                    if phpstan_result["errors"]:
+                        for err in phpstan_result["errors"][:3]:  # Max 3 errors
+                            errors.append({
+                                "type": "PHPStan",
+                                "message": err,
+                                "file": str(file_path)
+                            })
 
             # === JavaScript/TypeScript Validation ===
             elif ext in [".js", ".mjs", ".cjs"]:
@@ -196,3 +207,156 @@ class SyntaxValidator:
                         return f"error{parts[1][:80]}"
                 return line.strip()[:100]
         return output.strip()[:100] if output else "TypeScript error"
+
+    @staticmethod
+    async def _run_phpstan(file_path: str) -> Dict[str, Any]:
+        """
+        Run PHPStan static analysis on a PHP file.
+        Returns: {"available": bool, "errors": [...]}
+
+        Smart Project Detection:
+        1. Looks for existing phpstan.neon in project root
+        2. If not found, generates a temporary config
+        3. Runs PHPStan with proper project context
+        """
+        file_path = Path(file_path)
+
+        # Find project root (where vendor/ or phpstan.neon is)
+        project_root = SyntaxValidator._find_php_project_root(file_path)
+
+        # Check if PHPStan is available
+        phpstan_cmd = SyntaxValidator._find_phpstan(project_root)
+        if not phpstan_cmd:
+            return {"available": False, "errors": []}
+
+        # Check for existing phpstan.neon
+        config_file = None
+        for config_name in ["phpstan.neon", "phpstan.neon.dist", "phpstan.dist.neon"]:
+            if (project_root / config_name).exists():
+                config_file = project_root / config_name
+                break
+
+        # Build PHPStan command
+        cmd = [phpstan_cmd, "analyse"]
+
+        if config_file:
+            # Use existing config
+            cmd.extend(["--configuration", str(config_file)])
+        else:
+            # No config: use autoload and scan directories
+            cmd.extend([
+                "--level", str(PHPSTAN_LEVEL),
+                "--autoload-file", str(project_root / "vendor" / "autoload.php")
+                    if (project_root / "vendor" / "autoload.php").exists() else "",
+            ])
+            # Remove empty autoload if vendor doesn't exist
+            cmd = [c for c in cmd if c]
+
+            # Add scan directories for function discovery
+            for scan_dir in ["includes", "src", "lib", "app"]:
+                if (project_root / scan_dir).exists():
+                    cmd.extend(["--autoload-file", str(project_root / scan_dir)])
+
+        cmd.extend([
+            "--level", str(PHPSTAN_LEVEL),
+            "--no-progress",
+            "--no-ansi",
+            "--error-format", "raw",
+            str(file_path)
+        ])
+
+        # Run PHPStan from project root
+        result = await SyntaxValidator._run_phpstan_in_dir(cmd, project_root)
+
+        if result["returncode"] == 0:
+            return {"available": True, "errors": []}
+
+        # Parse errors from output
+        errors = []
+        output = result["stdout"] + result["stderr"]
+        for line in output.split('\n'):
+            line = line.strip()
+            if line and ':' in line and not line.startswith('Note:') and not line.startswith('['):
+                # Format: "file.php:12: Error message"
+                parts = line.split(':', 2)
+                if len(parts) >= 3:
+                    line_num = parts[1].strip()
+                    message = parts[2].strip()
+                    if message and not message.startswith('--'):
+                        errors.append(f"Line {line_num}: {message[:80]}")
+
+        return {"available": True, "errors": errors}
+
+    @staticmethod
+    def _find_php_project_root(file_path: Path) -> Path:
+        """Find PHP project root by looking for composer.json or vendor/."""
+        current = file_path.parent if file_path.is_file() else file_path
+
+        for _ in range(10):  # Max 10 levels up
+            # Check for project indicators
+            if (current / "composer.json").exists():
+                return current
+            if (current / "vendor").is_dir():
+                return current
+            if (current / "phpstan.neon").exists():
+                return current
+            if (current / "index.php").exists() and (current / "includes").is_dir():
+                return current  # Simple PHP project structure
+
+            parent = current.parent
+            if parent == current:  # Reached filesystem root
+                break
+            current = parent
+
+        # Fallback: use file's directory
+        return file_path.parent if file_path.is_file() else file_path
+
+    @staticmethod
+    def _find_phpstan(project_root: Path) -> str:
+        """Find PHPStan executable."""
+        import shutil
+
+        # 1. Check vendor/bin/phpstan
+        vendor_phpstan = project_root / "vendor" / "bin" / "phpstan"
+        if vendor_phpstan.exists():
+            return str(vendor_phpstan)
+
+        # 2. Check global phpstan
+        global_phpstan = shutil.which("phpstan")
+        if global_phpstan:
+            return global_phpstan
+
+        # 3. Check composer global
+        home = Path.home()
+        for global_path in [
+            home / ".composer" / "vendor" / "bin" / "phpstan",
+            home / ".config" / "composer" / "vendor" / "bin" / "phpstan",
+        ]:
+            if global_path.exists():
+                return str(global_path)
+
+        return ""
+
+    @staticmethod
+    async def _run_phpstan_in_dir(cmd: List[str], cwd: Path) -> Dict[str, Any]:
+        """Run PHPStan in a specific directory."""
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(cwd)
+            )
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=SYNTAX_CHECK_TIMEOUT_SECONDS * 2  # PHPStan needs more time
+            )
+            return {
+                "returncode": proc.returncode,
+                "stdout": stdout.decode() if stdout else "",
+                "stderr": stderr.decode() if stderr else ""
+            }
+        except asyncio.TimeoutError:
+            return {"returncode": -1, "stdout": "", "stderr": "PHPStan timeout"}
+        except FileNotFoundError:
+            return {"returncode": -1, "stdout": "", "stderr": "PHPStan not found"}

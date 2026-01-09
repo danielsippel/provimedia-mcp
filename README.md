@@ -11,6 +11,7 @@
 ### Core Features
 - **Task Scope Management** - Define task boundaries, acceptance criteria, and track progress
 - **Automatic Syntax Validation** - PHP, JavaScript, JSON, Python, TypeScript validation on file changes
+- **PHPStan Integration (v6.3)** - Static analysis catches runtime errors BEFORE execution (null access, type errors)
 - **Smart Context Tracking** - Canary-based context refresh ensures Claude never loses important instructions
 - **HTTP Endpoint Testing** - Test endpoints with session support and automatic auth detection
 
@@ -69,6 +70,8 @@ Configure in `~/.chainguard/chainguard/config.py`:
 | `TOON_ENABLED` | `True` | TOON format for array outputs (30-60% token savings) |
 | `MEMORY_ENABLED` | `False` | Long-Term Memory (requires chromadb, high RAM) |
 | `XML_RESPONSES_ENABLED` | `False` | Structured XML responses |
+| `PHPSTAN_ENABLED` | `True` | PHPStan static analysis for PHP files |
+| `PHPSTAN_LEVEL` | `8` | Analysis level 0-9 (5+ catches null errors, 8 recommended) |
 
 ## Installation
 
@@ -98,6 +101,7 @@ cd chainguard
 - Python 3.9+
 - Claude Code CLI
 - Optional: `chromadb` and `sentence-transformers` for Long-Term Memory
+- Optional: `phpstan` for PHP static analysis (catches runtime errors before execution)
 
 ## Usage
 
@@ -289,6 +293,16 @@ See the [LICENSE](LICENSE) file for full details.
 Created and maintained by **[Provimedia GmbH](https://provimedia.de)**
 
 ## Changelog
+
+### v6.3.0
+- **PHPStan Integration** - Static analysis for PHP files catches runtime errors BEFORE execution
+  - Detects null access errors (`$user['id']` on null)
+  - Type mismatches (string vs int)
+  - Undefined methods and properties
+  - Configurable analysis level (0-9, default: 8)
+  - Smart project root detection (composer.json, vendor/, phpstan.neon)
+- Automatic PHPStan detection (global, vendor/bin, or composer global)
+- New config flags: `PHPSTAN_ENABLED`, `PHPSTAN_LEVEL`
 
 ### v6.1.0
 - **Hallucination Prevention** - Detects LLM-hallucinated function calls and package imports

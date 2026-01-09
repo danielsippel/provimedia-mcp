@@ -21,7 +21,7 @@ from typing import Dict, Set, Union, List, Any
 # =============================================================================
 # Version
 # =============================================================================
-VERSION = "6.1.0"
+VERSION = "6.3.0"
 
 
 # =============================================================================
@@ -43,6 +43,19 @@ MEMORY_ENABLED = False
 # Checks function calls against known definitions in codebase
 # Only runs in programming mode, WARN mode = inform only, never block
 SYMBOL_VALIDATION_AUTO = True
+
+# PHPStan Integration (v6.3): Static analysis for PHP files
+# Catches runtime errors like null access, type mismatches BEFORE execution
+# Requires PHPStan installed: composer global require phpstan/phpstan
+# Or per project: composer require --dev phpstan/phpstan
+PHPSTAN_ENABLED = True
+
+# PHPStan analysis level (0-9):
+# 0-2: Basic checks
+# 3-4: Type hints
+# 5-6: Null checks (recommended - catches most runtime errors)
+# 7-9: Very strict
+PHPSTAN_LEVEL = 8
 
 
 # =============================================================================
@@ -205,7 +218,7 @@ TASK_MODE_CONTEXT: Dict[TaskMode, str] = {
 3. `chainguard_test_endpoint()` für geänderte Web-Routen
 4. `chainguard_finish(confirmed=True)` am Ende
 
-**Syntax-Validierung:** PHP, JS, JSON, Python, TypeScript aktiv
+**Syntax-Validierung:** PHP (+ PHPStan), JS, JSON, Python, TypeScript aktiv
 **Blockaden:** Aktiv bei Schema-Dateien ohne DB-Check
 ────────────────────────────────────────
 """,

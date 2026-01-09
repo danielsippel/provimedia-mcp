@@ -167,7 +167,7 @@ cp -r src/mcp-server/chainguard ~/.chainguard/
 
 ---
 
-## Modulstruktur (v6.1.0)
+## Modulstruktur (v6.3.0)
 
 Das Chainguard MCP Server Package besteht aus folgenden Modulen:
 
@@ -242,5 +242,43 @@ Das Chainguard MCP Server Package besteht aus folgenden Modulen:
 | Long-Term Memory | `chromadb`, `sentence-transformers` | memory.py, embeddings.py |
 | AST Analysis (präzise) | `tree-sitter`, `tree-sitter-python`, etc. | ast_analyzer.py |
 | HTTP Testing | `aiohttp` | http_session.py |
+| **PHPStan (v6.3)** | `phpstan` (via Composer) | validators.py |
 
 Ohne diese Packages funktioniert Chainguard weiterhin - Features werden automatisch deaktiviert.
+
+---
+
+## PHPStan Integration (v6.3)
+
+PHPStan erkennt Laufzeitfehler **VOR** der Code-Ausführung:
+- Null-Zugriffe (`$user['id']` auf null)
+- Typ-Fehler (string statt int)
+- Undefinierte Methoden
+
+### Installation
+
+```bash
+# Global (empfohlen)
+composer global require phpstan/phpstan
+
+# Oder per Projekt
+composer require --dev phpstan/phpstan
+```
+
+### Konfiguration
+
+In `~/.chainguard/chainguard/config.py`:
+
+```python
+PHPSTAN_ENABLED = True   # Aktiviert (Standard)
+PHPSTAN_LEVEL = 5        # Level 0-9 (5 empfohlen)
+```
+
+### Level-Übersicht
+
+| Level | Prüft |
+|-------|-------|
+| 0-2 | Basics (undefined vars) |
+| 3-4 | Typ-Hints |
+| **5-6** | **Null-Checks** (empfohlen) |
+| 7-9 | Sehr strikt |

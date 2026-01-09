@@ -32,7 +32,7 @@ BOLD='\033[1m'
 
 # Konfiguration
 CHAINGUARD_HOME="${CHAINGUARD_HOME:-$HOME/.chainguard}"
-CHAINGUARD_VERSION="5.3.0"
+CHAINGUARD_VERSION="6.3.0"
 GITHUB_REPO=""  # Nur lokale Installation - kein Remote-Repo
 GITHUB_BRANCH="main"
 MIN_PYTHON_VERSION="3.9"
@@ -491,6 +491,35 @@ verify_python_modules() {
 }
 
 # =============================================================================
+# Prüfe PHP-Tools (PHPStan für statische Analyse)
+# =============================================================================
+check_php_tools() {
+    step "Prüfe PHP-Tools"
+
+    # PHPStan prüfen
+    if command -v phpstan &> /dev/null; then
+        local phpstan_version=$(phpstan --version 2>/dev/null | head -1)
+        success "PHPStan gefunden: $phpstan_version"
+        echo "    PHPStan ist aktiviert für statische PHP-Analyse (Level 5)"
+    elif [[ -f "vendor/bin/phpstan" ]]; then
+        success "PHPStan gefunden: vendor/bin/phpstan"
+    else
+        warn "PHPStan nicht gefunden (optional, für erweiterte PHP-Analyse)"
+        echo ""
+        echo "  PHPStan erkennt Laufzeitfehler VOR der Ausführung:"
+        echo "    - Null-Zugriffe (\$user['id'] auf null)"
+        echo "    - Typ-Fehler (string statt int)"
+        echo "    - Undefinierte Methoden"
+        echo ""
+        echo "  Installation:"
+        echo "    Global:  composer global require phpstan/phpstan"
+        echo "    Projekt: composer require --dev phpstan/phpstan"
+        echo ""
+        echo "  Nach Installation ist PHPStan automatisch aktiv in Chainguard."
+    fi
+}
+
+# =============================================================================
 # Claude Code Konfiguration
 # =============================================================================
 configure_claude_code() {
@@ -874,15 +903,16 @@ print_summary() {
     echo "  chainguard_validate     - Validierung speichern"
     echo "  chainguard_set_phase    - Phase setzen"
     echo ""
-    echo -e "${CYAN}v5.1 Features (NEU):${NC}"
+    echo -e "${CYAN}v6.3 Features (NEU):${NC}"
+    echo "  • PHPStan Integration: Statische Analyse für PHP"
+    echo "  • Erkennt Laufzeitfehler VOR der Ausführung"
+    echo "  • Null-Zugriffe, Typ-Fehler, undefinierte Methoden"
+    echo "  • Level 5 (empfohlen): Findet die meisten Bugs"
+    echo ""
+    echo -e "${CYAN}v5.x Features:${NC}"
     echo "  • Long-Term Memory: Semantische Suche im Projekt"
     echo "  • ChromaDB + sentence-transformers (100% offline)"
-    echo "  • Smart Context Injection bei set_scope"
-    echo "  • Neue Tools: chainguard_memory_init, chainguard_memory_query"
-    echo ""
-    echo -e "${CYAN}v5.0 Features:${NC}"
     echo "  • Task-Mode System (programming, content, devops, research)"
-    echo "  • Mode-spezifische Validierung und Features"
     echo ""
     echo -e "${CYAN}v4.x Features:${NC}"
     echo "  • HARD ENFORCEMENT via PreToolUse Hook"
@@ -1042,6 +1072,7 @@ main() {
     install_files
     install_python_deps
     verify_python_modules || warn "Einige Python-Module fehlen"
+    check_php_tools
     configure_claude_code
 
     # Hooks konfigurieren (mit Benutzer-Bestätigung)
