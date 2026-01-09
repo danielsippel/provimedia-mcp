@@ -27,9 +27,8 @@ VERSION = "6.0.0"
 # =============================================================================
 # Feature Flags (v6.0)
 # =============================================================================
-# XML Responses: Enable structured XML responses for better Claude comprehension
-# Set CHAINGUARD_XML_RESPONSES=false to disable and use legacy plain text
-XML_RESPONSES_ENABLED = os.environ.get("CHAINGUARD_XML_RESPONSES", "true").lower() == "true"
+# XML Responses: Structured XML output for better Claude comprehension (+56% accuracy)
+XML_RESPONSES_ENABLED = True
 
 
 # =============================================================================
