@@ -84,7 +84,8 @@ Bei JEDEM Chainguard-Aufruf `ctx="..."` mitgeben! Fehlt er -> Kontext verloren -
 
 
 
-# CHAINGUARD v6.0.0 - TOON Token-Optimierung + Task-Mode System
+
+# CHAINGUARD v6.1.0 - TOON Token-Optimierung + Task-Mode System + Halluzination Prevention
 
 > **🔴 WICHTIG - Modulare Struktur:**
 > Der MCP-Server läuft von `~/.chainguard/` - NICHT aus diesem Projekt!
@@ -198,6 +199,209 @@ XML_RESPONSES_ENABLED = False  # XML-Responses (default: aus)
 Long-Term Memory (ChromaDB + sentence-transformers) kann **1-2GB RAM** verbrauchen und auf Systemen mit wenig Speicher zu Problemen führen. Daher ist `MEMORY_ENABLED = False` der neue Default.
 
 **Aktivieren (nur bei genug RAM):**
+```python
+# In ~/.chainguard/chainguard/config.py:
+MEMORY_ENABLED = True
+```
+
+---
+
+## v5.5.0 Features (NEU!)
+
+### Halluzination Prevention - Symbol & Package Validation
+
+LLMs halluzinieren manchmal Funktionsnamen oder Pakete, die nicht existieren. Chainguard erkennt das jetzt automatisch!
+
+#### Symbol Validation
+Prüft Funktions-/Methodenaufrufe gegen bekannte Definitionen im Projekt:
+
+```python
+# Modus setzen (Default: WARN)
+chainguard_symbol_mode(mode="WARN")  # OFF, WARN, STRICT, ADAPTIVE
+
+# Code validieren
+chainguard_validate_symbols(file="src/Controller.php")
+# → ⚠ Potential hallucination: unknownMethod() not found in codebase
+#   Confidence: 0.85 - likely hallucinated
+```
+
+| Modus | Verhalten |
+|-------|-----------|
+| OFF | Deaktiviert |
+| WARN | Warnung anzeigen (Default, blockiert nie) |
+| STRICT | Blockiert bei hoher Konfidenz (>0.8) |
+| ADAPTIVE | Auto-Anpassung basierend auf False-Positive-Rate |
+
+#### Package Validation (Slopsquatting Detection)
+~20% der LLM-empfohlenen Pakete existieren nicht! Angreifer registrieren diese Namen ("Slopsquatting"):
+
+```python
+chainguard_validate_packages(file="src/app.js")
+# → ⚠ Package 'colrs' not found in package.json
+#   Did you mean: 'colors'? (Levenshtein: 1)
+#   🔴 SLOPSQUATTING RISK: Similar package exists!
+```
+
+**Unterstützte Paket-Manager:**
+- PHP: composer.json / composer.lock
+- JS/TS: package.json / node_modules
+- Python: requirements.txt / pyproject.toml
+
+### Neue Tools (v5.5)
+
+| Tool | Zweck |
+|------|-------|
+| `chainguard_symbol_mode` | Validierungsmodus setzen/anzeigen |
+| `chainguard_validate_symbols` | Funktionsaufrufe gegen Codebase prüfen |
+| `chainguard_validate_packages` | Imports gegen Dependencies prüfen |
+
+---
+
+## v5.3.0 Features
+
+### AST-Analyse & Architektur-Erkennung
+
+#### Code-Struktur analysieren
+Extrahiert Klassen, Funktionen, Methoden, Imports mit AST-Parsing:
+
+```python
+chainguard_analyze_code(file="src/UserController.php")
+# → 📊 AST Analysis: UserController.php
+#   Classes: UserController
+#   Methods: index(), store(), update(), destroy()
+#   Imports: App\Models\User, Illuminate\Http\Request
+#   Relationships: extends Controller, uses User
+```
+
+#### Architektur erkennen
+Identifiziert Framework und Architektur-Pattern automatisch:
+
+```python
+chainguard_detect_architecture()
+# → 🏗 Architecture Detection:
+#   Framework: Laravel 10.x (detected)
+#   Pattern: MVC (Model-View-Controller)
+#
+#   Evidence:
+#   - app/Http/Controllers/ → Controllers
+#   - app/Models/ → Models
+#   - resources/views/ → Views
+#   - routes/web.php → Routing
+```
+
+**Erkannte Patterns:** MVC, MVVM, Clean Architecture, Layered, API-first, Hexagonal
+
+### Memory Export/Import
+
+Projekt-Memory portabel machen für Backup oder Transfer:
+
+```python
+# Exportieren
+chainguard_memory_export(format="json", compress=True)
+# → ✓ Exported to ~/.chainguard/exports/garvis_2024-01-15.json.gz
+#   Size: 2.3 MB (12.1 MB uncompressed)
+
+# Importieren
+chainguard_memory_import(file="backup.json", merge=True)
+# → ✓ Imported 847 documents, skipped 23 existing
+
+# Verfügbare Exports auflisten
+chainguard_list_exports()
+# → exports[3]: garvis_2024-01-15.json.gz, project2_2024-01-10.json, ...
+```
+
+### Neue Tools (v5.3)
+
+| Tool | Zweck |
+|------|-------|
+| `chainguard_analyze_code` | AST-Analyse für Code-Struktur |
+| `chainguard_detect_architecture` | Framework & Pattern erkennen |
+| `chainguard_memory_export` | Memory exportieren (JSON/JSONL, optional gzip) |
+| `chainguard_memory_import` | Memory importieren (merge/replace) |
+| `chainguard_list_exports` | Verfügbare Export-Dateien auflisten |
+
+---
+
+## v5.1.0 Features
+
+### Long-Term Memory - Semantische Suche im Code
+
+Chainguard kann jetzt die gesamte Codebase indexieren und semantische Fragen beantworten!
+
+#### Memory initialisieren
+```python
+chainguard_memory_init()
+# → 🧠 Initializing Long-Term Memory...
+#   Indexing: 347 files (py, php, js, ts, tsx)
+#   Duration: 2m 34s
+#   Storage: 45 MB
+#   ✓ Memory ready for semantic search
+```
+
+#### Semantische Suche
+```python
+chainguard_memory_query(query="Wo wird die Authentifizierung gehandhabt?")
+# → 🔍 Results for "Wo wird die Authentifizierung gehandhabt?":
+#
+#   1. src/Auth/AuthController.php (0.92)
+#      → Handles login, logout, password reset
+#
+#   2. src/Middleware/AuthMiddleware.php (0.87)
+#      → JWT token validation, session checks
+#
+#   3. config/auth.php (0.71)
+#      → Auth configuration, guards, providers
+```
+
+#### Memory aktualisieren
+```python
+# Nach großen Änderungen
+chainguard_memory_update(action="reindex_file", file_path="src/NewFeature.php")
+
+# Erkenntnisse speichern
+chainguard_memory_update(
+    action="add_learning",
+    learning="Die Auth-Logik verwendet JWT mit 24h Expiry"
+)
+
+# Veraltete Einträge entfernen
+chainguard_memory_update(action="cleanup")
+```
+
+#### Deep Logic Summaries
+```python
+chainguard_memory_summarize(file="src/PaymentService.php")
+# → 📝 Summary: PaymentService.php
+#
+#   Purpose: Handles all payment processing
+#
+#   Key Functions:
+#   - processPayment(): Validates card, charges via Stripe API
+#   - refund(): Issues partial/full refunds
+#   - validateCard(): Luhn check + expiry validation
+#
+#   Dependencies: Stripe SDK, Logger, UserRepository
+```
+
+### Neue Tools (v5.1)
+
+| Tool | Zweck |
+|------|-------|
+| `chainguard_memory_init` | Memory initialisieren (indexiert Codebase) |
+| `chainguard_memory_query` | Semantische Suche ("Wo ist X?") |
+| `chainguard_memory_update` | Memory aktualisieren (reindex/learn/cleanup) |
+| `chainguard_memory_status` | Memory-Status und Statistiken |
+| `chainguard_memory_summarize` | Deep Logic Summaries generieren |
+
+### Memory-Anforderungen
+
+```bash
+pip install chromadb sentence-transformers
+```
+
+**RAM-Verbrauch:** 1-2 GB (daher standardmäßig deaktiviert)
+
+**Aktivieren:**
 ```python
 # In ~/.chainguard/chainguard/config.py:
 MEMORY_ENABLED = True
@@ -717,7 +921,7 @@ chainguard_finish                            # Prüft alles automatisch!
 
 **Blockiert** wenn nicht 100% erfüllt! Mit `force=true` überschreibbar.
 
-## Tools (v5.0)
+## Tools (v6.1)
 
 ### Core (täglich nutzen)
 | Tool | Zweck |
@@ -800,6 +1004,31 @@ chainguard_finish                            # Prüft alles automatisch!
 | `chainguard_clear_alerts` | Alerts bestätigen |
 | `chainguard_projects` | Alle Projekte listen |
 | `chainguard_config` | Konfiguration |
+
+### Long-Term Memory (v5.1)
+| Tool | Zweck |
+|------|-------|
+| `chainguard_memory_init` | Memory initialisieren (indexiert Codebase) |
+| `chainguard_memory_query` | Semantische Suche ("Wo ist Auth?") |
+| `chainguard_memory_update` | Memory aktualisieren (reindex/learn/cleanup) |
+| `chainguard_memory_status` | Memory-Status und Statistiken |
+| `chainguard_memory_summarize` | Deep Logic Summaries generieren |
+
+### AST & Architektur (v5.3)
+| Tool | Zweck |
+|------|-------|
+| `chainguard_analyze_code` | AST-Analyse für Code-Struktur |
+| `chainguard_detect_architecture` | Framework & Pattern erkennen |
+| `chainguard_memory_export` | Memory exportieren (JSON/JSONL) |
+| `chainguard_memory_import` | Memory importieren |
+| `chainguard_list_exports` | Verfügbare Exports auflisten |
+
+### Halluzination Prevention (v5.5)
+| Tool | Zweck |
+|------|-------|
+| `chainguard_symbol_mode` | Validierungsmodus (OFF/WARN/STRICT/ADAPTIVE) |
+| `chainguard_validate_symbols` | Funktionsaufrufe gegen Codebase prüfen |
+| `chainguard_validate_packages` | Imports gegen Dependencies prüfen (Slopsquatting) |
 
 ## HTTP Testing Workflow (NEU v4.2)
 
