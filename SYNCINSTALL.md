@@ -161,7 +161,7 @@ cp -r src/mcp-server/chainguard ~/.chainguard/
 
 ---
 
-## Modulstruktur (v5.4.0)
+## Modulstruktur (v6.0.0)
 
 Das Chainguard MCP Server Package besteht aus folgenden Modulen:
 
@@ -205,6 +205,11 @@ Das Chainguard MCP Server Package besteht aus folgenden Modulen:
 | Modul | Zweck |
 |-------|-------|
 | `code_summarizer.py` | Deep Logic Extraction - menschenlesbare Code-Summaries |
+
+### Phase 5 Features (v6.0+)
+| Modul | Zweck |
+|-------|-------|
+| `xml_response.py` | XML Response System - strukturierte XML-Ausgabe für bessere Claude-Comprehension |
 
 ### Utilities
 | Modul | Zweck |

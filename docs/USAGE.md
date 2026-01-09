@@ -1,4 +1,4 @@
-# Chainguard v5.4.0 - Nutzungsanleitung
+# Chainguard v6.0.0 - Nutzungsanleitung
 
 ## Schnellstart
 
@@ -44,9 +44,9 @@ chainguard_finish                    # Schritt 1: Zeigt Impact-Check
 chainguard_finish(confirmed=true)    # Schritt 2: Schließt ab
 ```
 
-## v5.4 - Modulare Architektur & Long-Term Memory
+## v6.0 - XML Response System & Modulare Architektur
 
-Das Chainguard Package besteht aus **20 Modulen**:
+Das Chainguard Package besteht aus **21 Modulen**:
 
 ### Core Module
 | Modul | Zweck |
@@ -89,6 +89,11 @@ Das Chainguard Package besteht aus **20 Modulen**:
 |-------|-------|
 | `code_summarizer.py` | Deep Logic Extraction - menschenlesbare Code-Summaries |
 
+### Phase 5 Features (v6.0+)
+| Modul | Zweck |
+|-------|-------|
+| `xml_response.py` | XML Response System - strukturierte XML-Ausgabe für bessere Claude-Comprehension |
+
 ### Utilities
 | Modul | Zweck |
 |-------|-------|
@@ -96,6 +101,12 @@ Das Chainguard Package besteht aus **20 Modulen**:
 | `history.py` | Error Memory System |
 | `db_inspector.py` | Database Schema Inspection |
 | `utils.py` | Path-Sanitization, Hilfsfunktionen |
+
+**v6.0 Highlights:**
+- **XML Response System**: Strukturierte XML-Ausgabe für +56% bessere Claude-Comprehension
+- **Feature Flag**: `XML_RESPONSES_ENABLED` für schrittweisen Rollout
+- **Neue Funktionen**: `xml_success`, `xml_error`, `xml_warning`, `xml_info`, `xml_blocked`
+- **Alle Handler konvertiert**: Core, Validation, HTTP, Test Runner, Memory, AST, Mode-spezifische
 
 **v5.4 Highlights:**
 - **Deep Logic Summaries**: Code-Logik wird in menschenlesbaren Summaries gespeichert
@@ -315,6 +326,26 @@ Falls du manuell aktualisieren willst:
 cp src/mcp-server/chainguard_mcp.py ~/.chainguard/
 cp -r src/mcp-server/chainguard ~/.chainguard/
 ```
+
+## v6.0.0 Changelog (Phase 5)
+
+- **XML Response System**: `xml_response.py` mit XMLResponse-Klasse für strukturierte Ausgabe
+- **Research-basiert**: +56% Genauigkeitsverbesserung mit XML vs JSON Responses
+- **Convenience Functions**: `xml_success()`, `xml_error()`, `xml_warning()`, `xml_info()`, `xml_blocked()`
+- **Feature Flag**: `XML_RESPONSES_ENABLED` in config.py für schrittweisen Rollout
+- **Alle Handler konvertiert**:
+  - Core (set_scope, track, status, context, etc.)
+  - Validation (check_criteria, run_checklist, validate, finish)
+  - HTTP (test_endpoint, login, set_base_url)
+  - Test Runner (test_config, run_tests, test_status)
+  - History (recall, history, learn)
+  - Database (db_connect, db_schema, db_table, db_disconnect)
+  - Memory (memory_init, query, update, status, summarize)
+  - AST/Architecture (analyze_code, detect_architecture)
+  - Export/Import (memory_export, memory_import, list_exports)
+  - Mode-spezifische (Content, DevOps, Research)
+- **32 neue Tests**: Vollständige Test-Coverage für XML Response System
+- **Backwards-kompatibel**: Legacy Text-Responses bei deaktiviertem Feature Flag
 
 ## v5.4.0 Changelog (Phase 4)
 

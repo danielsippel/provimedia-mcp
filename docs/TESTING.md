@@ -7,10 +7,10 @@ Diese Dokumentation beschreibt das Unit-Test-System für den Chainguard MCP Serv
 | Metrik | Wert |
 |--------|------|
 | Test-Framework | pytest |
-| Anzahl Tests | 605+ |
-| Test-Dateien | 15 |
+| Anzahl Tests | 701+ |
+| Test-Dateien | 16 |
 | Gesamt-Coverage | ~70% |
-| Abdeckung | Alle Module inkl. Phase 4 Features |
+| Abdeckung | Alle Module inkl. Phase 5 Features (XML Response System) |
 
 ## Struktur
 
@@ -46,7 +46,10 @@ src/mcp-server/
 │   ├── test_memory_export.py   # Export/Import (29 Tests)
 │   │
 │   │   # Phase 4 Tests (v5.4+)
-│   └── test_code_summarizer.py # Deep Logic Summaries (45 Tests)
+│   ├── test_code_summarizer.py # Deep Logic Summaries (45 Tests)
+│   │
+│   │   # Phase 5 Tests (v6.0+)
+│   └── test_xml_response.py    # XML Response System (32 Tests)
 │
 └── chainguard/
     └── ...                  # Module unter Test
@@ -336,6 +339,31 @@ Testet die Deep Logic Extraction:
 - `test_*_class_purpose` - Erkennt Controller, Service, Repository, Factory, Validator Suffixe
 - `test_summarize_python/php/javascript_file` - Multi-Language-Support
 - `test_malformed_code` - Robustheit bei fehlerhaftem Code
+
+---
+
+## Phase 5 Tests (v6.0+)
+
+### test_xml_response.py (32 Tests)
+
+Testet das XML Response System:
+
+| Klasse | Tests | Beschreibung |
+|--------|-------|--------------|
+| `TestXMLResponse` | 8 | XMLResponse Dataclass, to_xml(), Escaping |
+| `TestResponseStatus` | 2 | ResponseStatus Enum |
+| `TestConvenienceFunctions` | 6 | xml_success, xml_error, xml_warning, xml_info, xml_blocked |
+| `TestBuildContext` | 4 | Context-Building für Mode-Injection |
+| `TestValidation` | 5 | is_valid_xml, parse_xml_response |
+| `TestEdgeCases` | 6 | Unicode, Numeric, Boolean, Nested Data |
+| `TestIntegration` | 3 | End-to-end XML Response Tests |
+
+**Wichtige Tests:**
+- `test_special_characters_escaped` - XML-Escaping für <, >, &, "
+- `test_sanitize_tag_names` - Ungültige Tag-Namen werden bereinigt
+- `test_response_with_context` - Context-Injection für Modi
+- `test_set_scope_response` - Realistischer set_scope Output
+- `test_blocked_scope_response` - Blocker-Response Format
 
 ---
 
