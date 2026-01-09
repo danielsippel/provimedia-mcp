@@ -27,8 +27,8 @@ VERSION = "6.0.0"
 # =============================================================================
 # Feature Flags (v6.0)
 # =============================================================================
-# XML Responses: Structured XML output for better Claude comprehension (+56% accuracy)
-XML_RESPONSES_ENABLED = True
+# XML Responses: Structured XML output (disabled by default - unproven benefit, higher token cost)
+XML_RESPONSES_ENABLED = False
 
 
 # =============================================================================
