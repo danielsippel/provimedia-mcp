@@ -20,6 +20,8 @@
 - **Automatic Indexing** - Code structure, functions, database schema, architecture patterns
 - **Project Isolation** - Each project has its own isolated memory
 
+> **Note:** Long-Term Memory is disabled by default (`MEMORY_ENABLED=False`) to prevent high RAM usage. Enable it in `~/.chainguard/chainguard/config.py` if you have 8GB+ RAM.
+
 ### TOON Encoder (v6.0)
 - **Token-Oriented Object Notation** - Compact data format for 30-60% token savings
 - **Optimized for Arrays** - Best for lists of files, tables, history entries
@@ -43,6 +45,16 @@
 | `devops` | Server admin, CLI tools, WordPress |
 | `research` | Analysis, information gathering |
 | `generic` | Minimal tracking |
+
+### Feature Flags
+
+Configure in `~/.chainguard/chainguard/config.py`:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `TOON_ENABLED` | `True` | TOON format for array outputs (30-60% token savings) |
+| `MEMORY_ENABLED` | `False` | Long-Term Memory (requires chromadb, high RAM) |
+| `XML_RESPONSES_ENABLED` | `False` | Structured XML responses |
 
 ## Installation
 
@@ -241,12 +253,12 @@ Created and maintained by **[Provimedia GmbH](https://provimedia.de)**
 ## Changelog
 
 ### v6.0.0
-- **XML Response System** - Structured XML output for all tool responses
-- New `xml_response.py` module with `XMLResponse` class
-- Convenience functions: `xml_success`, `xml_error`, `xml_warning`, `xml_blocked`
-- Context injection via XML templates
-- Feature flag `XML_RESPONSES_ENABLED` (default: true)
-- 531 new tests for XML response module
+- **TOON Encoder** - Token-Oriented Object Notation for 30-60% token savings
+- New `toon.py` module with `encode_toon`, `toon_array`, `toon_object` functions
+- Integrated into `chainguard_projects` and `chainguard_history`
+- **Memory disabled by default** - Prevents RAM issues on low-memory systems
+- Feature flags: `TOON_ENABLED=True`, `MEMORY_ENABLED=False`, `XML_RESPONSES_ENABLED=False`
+- 63 new tests for TOON encoder, 764+ total tests
 
 ### v5.4.0
 - Deep Logic Summaries with `code_summarizer.py`
