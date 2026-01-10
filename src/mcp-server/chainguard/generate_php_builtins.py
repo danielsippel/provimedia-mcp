@@ -209,6 +209,9 @@ def generate_builtins(output_path: Path, stubs_path: Path = None) -> Dict:
                 'source': PHPSTORM_STUBS_REPO,
                 'branch': PHPSTORM_STUBS_BRANCH,
                 'version': '1.0',
+                'license': 'Apache-2.0',
+                'copyright': 'Copyright 2010-2024 JetBrains s.r.o.',
+                'license_url': 'https://github.com/JetBrains/phpstorm-stubs/blob/master/LICENSE',
             },
             'stats': {
                 'functions': len(symbols['functions']),

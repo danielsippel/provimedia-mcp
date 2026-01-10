@@ -3,7 +3,10 @@
     "generated_at": "2026-01-10T18:28:33.049162Z",
     "source": "https://github.com/JetBrains/phpstorm-stubs.git",
     "branch": "master",
-    "version": "1.0"
+    "version": "1.0",
+    "license": "Apache-2.0",
+    "copyright": "Copyright 2010-2024 JetBrains s.r.o.",
+    "license_url": "https://github.com/JetBrains/phpstorm-stubs/blob/master/LICENSE"
   },
   "stats": {
     "functions": 5028,
