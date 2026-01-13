@@ -56,6 +56,8 @@ setup(
         "mcp>=0.9.0",
         "aiofiles>=23.0.0",  # Async I/O für High-End Performance
         "aiohttp>=3.9.0",    # HTTP Client für Endpoint-Testing (v4.2)
+        "chromadb>=0.4.0,<0.5.0",
+        "sentence-transformers>=2.2.0,<3.0.0",
     ],
 
     # Optionale Abhängigkeiten
