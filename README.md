@@ -23,7 +23,7 @@
 - **Automatic Indexing** - Code structure, functions, database schema, architecture patterns
 - **Project Isolation** - Each project has its own isolated memory
 
-> **Note:** Long-Term Memory is disabled by default (`MEMORY_ENABLED=False`) to prevent high RAM usage. Enable it in `~/.chainguard/chainguard/config.py` if you have 8GB+ RAM.
+> **Recommendation:** On developer machines (e.g., Mac with 16GB+ RAM), enabling memory is safe and highly recommended. Set `-e CHAINGUARD_MEMORY_ENABLED=true` to unlock **Semantic Code Search**—a core feature of Chainguard that you shouldn't miss.
 
 ### TOON Encoder (v6.0)
 
@@ -73,13 +73,13 @@
 
 Configure in `~/.chainguard/chainguard/config.py`:
 
-| Flag                    | Default | Description                                                |
-| ----------------------- | ------- | ---------------------------------------------------------- |
-| `TOON_ENABLED`          | `True`  | TOON format for array outputs (30-60% token savings)       |
-| `MEMORY_ENABLED`        | `False` | Long-Term Memory (requires chromadb, high RAM)             |
-| `XML_RESPONSES_ENABLED` | `False` | Structured XML responses                                   |
-| `PHPSTAN_ENABLED`       | `True`  | PHPStan static analysis for PHP files                      |
-| `PHPSTAN_LEVEL`         | `8`     | Analysis level 0-9 (5+ catches null errors, 8 recommended) |
+| Flag                    | Default | Description                                                                           |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `TOON_ENABLED`          | `True`  | TOON format for array outputs (30-60% token savings)                                  |
+| `MEMORY_ENABLED`        | `False` | Long-Term Memory (requires chromadb). Enable via ENV `CHAINGUARD_MEMORY_ENABLED=true` |
+| `XML_RESPONSES_ENABLED` | `False` | Structured XML responses                                                              |
+| `PHPSTAN_ENABLED`       | `True`  | PHPStan static analysis for PHP files                                                 |
+| `PHPSTAN_LEVEL`         | `8`     | Analysis level 0-9 (5+ catches null errors, 8 recommended)                            |
 
 ## Installation
 
@@ -157,6 +157,10 @@ cd chainguard
            "-v",
            "${HOME}/.chainguard:/app/data",
 
+           // 4. Enable Long-Term Memory (optional)
+           "-e",
+           "CHAINGUARD_MEMORY_ENABLED=true",
+
            "provimedia-mcp-chainguard:local"
          ]
        }
@@ -167,7 +171,7 @@ cd chainguard
    > **Important for Docker Users:**
    >
    > 1. **Volume Mount:** You MUST mount your local code directory so the container can access and analyze your source files.
-   > 2. **Memory:** To use Long-Term Memory, set `MEMORY_ENABLED=true` and ensure your Docker image includes `chromadb`.
+   > 2. **Memory:** Long-Term Memory is disabled by default to save RAM. Add `-e CHAINGUARD_MEMORY_ENABLED=true` to enable it (requires ~1-2GB RAM).
 
 ## Usage
 
