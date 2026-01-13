@@ -151,10 +151,6 @@ cd chainguard
            "-v",
            "/path/to/your/projects:/path/to/your/projects",
 
-           // 2. Enable Long-Term Memory (requires chromadb installed in image)
-           "-e",
-           "MEMORY_ENABLED=true",
-
            // 3. Persist Chainguard state
            "-e",
            "CHAINGUARD_HOME=/app/data",
