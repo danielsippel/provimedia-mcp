@@ -159,10 +159,6 @@ cd provimedia-mcp
            "-v",
            "${HOME}/.chainguard:/app/data",
 
-           // 3. Enable Long-Term Memory (recommended)
-           "-e",
-           "CHAINGUARD_MEMORY_ENABLED=true",
-
            "provimedia-mcp-chainguard:local"
          ]
        }
